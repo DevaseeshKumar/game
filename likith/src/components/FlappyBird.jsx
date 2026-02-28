@@ -11,7 +11,6 @@ const FlappyBird = () => {
   const bgMusicRef = useRef(null);
   const failedAudioRef = useRef(null);
   const highScoreAudioRef = useRef(null);
-  const jumpAudioRef = useRef(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [isNewHighScore, setIsNewHighScore] = useState(false);
@@ -155,10 +154,7 @@ const FlappyBird = () => {
   const handleJump = () => {
     if (!gameOver && gameStarted) {
       gameStateRef.current.velocity = gameStateRef.current.jump;
-      if (jumpAudioRef.current) {
-        jumpAudioRef.current.currentTime = 0;
-        jumpAudioRef.current.play().catch(() => { });
-      }
+      playSound('jump');
     }
   };
 
@@ -513,7 +509,6 @@ const FlappyBird = () => {
       <audio ref={bgMusicRef} src="/backgroundmusic.m4a" loop preload="auto" volume="0.3" />
       <audio ref={failedAudioRef} src="/failedaudio.m4a" loop preload="auto" />
       <audio ref={highScoreAudioRef} src="/highscoreaudio.m4a" loop preload="auto" />
-      <audio ref={jumpAudioRef} src="/jumpaudio.m4a" preload="auto" />
 
       <div className="controls">
         <p>🎮 {isMobile ? 'Tap to jump' : 'Press SPACE or click to jump'}</p>
