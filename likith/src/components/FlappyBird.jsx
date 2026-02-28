@@ -194,25 +194,15 @@ const FlappyBird = () => {
       setIsMobile(mobile);
 
       if (mobile) {
-        // On mobile: fill as much of the screen as possible
-        const availWidth = width - 10; // small side margin
-        const availHeight = window.innerHeight * 0.75; // leave room for controls
-        const aspectRatio = BASE_WIDTH / BASE_HEIGHT;
-
-        let canvasW = availWidth;
-        let canvasH = canvasW / aspectRatio;
-
-        if (canvasH > availHeight) {
-          canvasH = availHeight;
-          canvasW = canvasH * aspectRatio;
-        }
-
+        // On mobile: fill the ENTIRE screen, no preserved aspect ratio
+        const canvasW = width - 6; // tiny side margin
+        const canvasH = window.innerHeight - 40; // leave just a sliver for controls
         setCanvasDimensions({ width: Math.floor(canvasW), height: Math.floor(canvasH) });
       } else if (width < 1024) {
-        // Tablet
-        const maxW = Math.min(width - 40, 700);
-        const aspectRatio = BASE_WIDTH / BASE_HEIGHT;
-        setCanvasDimensions({ width: maxW, height: Math.floor(maxW / aspectRatio) });
+        // Tablet — fill more of the screen
+        const canvasW = Math.min(width - 30, 750);
+        const canvasH = Math.floor(window.innerHeight * 0.8);
+        setCanvasDimensions({ width: canvasW, height: canvasH });
       } else {
         setCanvasDimensions({ width: BASE_WIDTH, height: BASE_HEIGHT });
       }
@@ -220,7 +210,11 @@ const FlappyBird = () => {
 
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
+    window.addEventListener('orientationchange', updateCanvasSize);
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize);
+      window.removeEventListener('orientationchange', updateCanvasSize);
+    };
   }, []);
 
   // Main game loop

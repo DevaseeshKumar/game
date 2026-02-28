@@ -7,9 +7,9 @@
   height: 100vh;
   /* fallback */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  gap: 10px;
+  gap: 4px;
   font-family: Arial, sans-serif;
-  padding: 10px;
+  padding: 0;
   position: relative;
   width: 100%;
   box-sizing: border-box;
@@ -319,57 +319,56 @@
    ========================================== */
 @media (max-width: 767px) {
   .flappy-bird-container {
-    gap: 6px;
-    padding: 5px;
+    gap: 2px;
+    padding: 0;
     justify-content: flex-start;
-    padding-top: 10px;
+    padding-top: 0;
   }
 
   .game-canvas {
-    width: calc(100vw - 10px);
-    max-height: 70vh;
-    max-height: 70dvh;
-    border: 3px solid white;
+    width: calc(100vw - 6px);
+    border: 2px solid white;
+    border-radius: 0;
   }
 
   .overlay-content {
-    padding: 20px;
+    padding: 18px;
     border-radius: 8px;
     max-width: 92%;
-    max-height: 85vh;
-    max-height: 85dvh;
+    max-height: 90vh;
+    max-height: 90dvh;
     overflow-y: auto;
   }
 
   .overlay-content h1 {
-    font-size: 28px;
-    margin: 0 0 12px 0;
+    font-size: 26px;
+    margin: 0 0 10px 0;
   }
 
   .overlay-content p {
-    font-size: 14px;
-    margin: 6px 0;
+    font-size: 13px;
+    margin: 5px 0;
   }
 
   .start-button {
-    margin-top: 12px;
+    margin-top: 10px;
     padding: 10px 24px;
-    font-size: 16px;
+    font-size: 15px;
     border-radius: 4px;
   }
 
   .controls {
-    font-size: 12px;
-    padding: 6px 12px;
+    font-size: 11px;
+    padding: 4px 10px;
     border-radius: 4px;
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   .gameover-screen {
     max-width: 90vw;
-    max-height: 85vh;
-    max-height: 85dvh;
-    padding: 16px !important;
+    max-height: 90vh;
+    max-height: 90dvh;
+    padding: 14px !important;
   }
 
   .gameover-video {
@@ -431,16 +430,15 @@
   .flappy-bird-container {
     min-height: 100dvh;
     min-height: 100vh;
-    gap: 5px;
-    padding: 3px;
-    padding-top: 5px;
+    gap: 2px;
+    padding: 0;
+    padding-top: 0;
   }
 
   .game-canvas {
-    width: calc(100vw - 6px);
-    max-height: 65vh;
-    max-height: 65dvh;
+    width: calc(100vw - 4px);
     border: 2px solid white;
+    border-radius: 0;
   }
 
   .overlay-content {
