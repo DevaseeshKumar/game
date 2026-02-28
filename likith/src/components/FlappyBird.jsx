@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/FlappyBird.css';
 
+// Base dimensions the game was designed for
+const BASE_WIDTH = 800;
+const BASE_HEIGHT = 600;
+
 const FlappyBird = () => {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -17,6 +21,15 @@ const FlappyBird = () => {
     return saved ? parseInt(saved, 10) : 0;
   });
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Scale factor based on current canvas vs base canvas
+  const getScale = (width, height) => {
+    const scaleX = width / BASE_WIDTH;
+    const scaleY = height / BASE_HEIGHT;
+    return Math.min(scaleX, scaleY);
+  };
+
   const gameStateRef = useRef({
     birdY: 150,
     birdX: 50,
@@ -115,19 +128,27 @@ const FlappyBird = () => {
     setGameStarted(true);
     setGameOver(false);
     setScore(0);
+
+    // Scale all game values proportionally to current canvas size
+    const { width, height } = canvasDimensions;
+    const scale = getScale(width, height);
+
     gameStateRef.current = {
-      birdY: 150,
-      birdX: 50,
-      birdWidth: 80,
-      birdHeight: 60,
+      birdY: 150 * scale,
+      birdX: 50 * scale,
+      birdWidth: 80 * scale,
+      birdHeight: 60 * scale,
       velocity: 0,
-      gravity: 0.2,
-      jump: -6,
-      pipeGap: 200,
-      pipeWidth: 80,
-      pipeSpeed: 3,
-      pipes: [{ x: 800 }],
+      gravity: 0.2 * scale,
+      jump: -6 * scale,
+      pipeGap: 200 * scale,
+      pipeWidth: 80 * scale,
+      pipeSpeed: 3 * scale,
+      pipes: [{ x: width }],
       score: 0,
+      canvasWidth: width,
+      canvasHeight: height,
+      scale: scale,
     };
   };
 
@@ -154,7 +175,8 @@ const FlappyBird = () => {
     }
   };
 
-  const handleTouchStart = () => {
+  const handleTouchStart = (e) => {
+    e.preventDefault(); // Prevent scrolling on mobile
     if (!gameStarted) {
       startGame();
     } else if (!gameOver) {
@@ -167,19 +189,32 @@ const FlappyBird = () => {
   // Responsive canvas sizing
   useEffect(() => {
     const updateCanvasSize = () => {
-      if (containerRef.current) {
-        const width = window.innerWidth;
-        const isMobile = width < 768;
+      const width = window.innerWidth;
+      const mobile = width < 768;
+      setIsMobile(mobile);
 
-        if (isMobile) {
-          const maxWidth = Math.min(width - 20, 500);
-          const aspectRatio = 800 / 600;
-          const maxHeight = window.innerHeight * 0.7;
-          const height = Math.min(maxWidth / aspectRatio, maxHeight);
-          setCanvasDimensions({ width: maxWidth, height });
-        } else {
-          setCanvasDimensions({ width: 800, height: 600 });
+      if (mobile) {
+        // On mobile: fill as much of the screen as possible
+        const availWidth = width - 10; // small side margin
+        const availHeight = window.innerHeight * 0.75; // leave room for controls
+        const aspectRatio = BASE_WIDTH / BASE_HEIGHT;
+
+        let canvasW = availWidth;
+        let canvasH = canvasW / aspectRatio;
+
+        if (canvasH > availHeight) {
+          canvasH = availHeight;
+          canvasW = canvasH * aspectRatio;
         }
+
+        setCanvasDimensions({ width: Math.floor(canvasW), height: Math.floor(canvasH) });
+      } else if (width < 1024) {
+        // Tablet
+        const maxW = Math.min(width - 40, 700);
+        const aspectRatio = BASE_WIDTH / BASE_HEIGHT;
+        setCanvasDimensions({ width: maxW, height: Math.floor(maxW / aspectRatio) });
+      } else {
+        setCanvasDimensions({ width: BASE_WIDTH, height: BASE_HEIGHT });
       }
     };
 
@@ -206,6 +241,8 @@ const FlappyBird = () => {
     images.pipe.src = '/pipe.png';
     images.bg.src = '/background.svg';
 
+    const scale = gameStateRef.current.scale || 1;
+
     const gameLoop = setInterval(() => {
       const state = gameStateRef.current;
 
@@ -213,9 +250,11 @@ const FlappyBird = () => {
       state.velocity += state.gravity;
       state.birdY += state.velocity;
 
-      // Generate pipes
-      if (state.pipes.length === 0 || state.pipes[state.pipes.length - 1].x < 300) {
-        const randomGapY = Math.random() * (canvas.height - state.pipeGap - 100) + 50;
+      // Generate pipes using scaled values
+      if (state.pipes.length === 0 || state.pipes[state.pipes.length - 1].x < 300 * scale) {
+        const minGapY = 50 * scale;
+        const maxGapY = canvas.height - state.pipeGap - minGapY;
+        const randomGapY = Math.random() * (maxGapY - minGapY) + minGapY;
         state.pipes.push({
           x: canvas.width,
           gapY: randomGapY,
@@ -339,14 +378,14 @@ const FlappyBird = () => {
 
         // Draw pipe outlines
         ctx.strokeStyle = '#1a5c1a';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = Math.max(2, 3 * scale);
         ctx.strokeRect(pipe.x, 0, state.pipeWidth, pipe.gapY);
         ctx.strokeRect(pipe.x, pipe.gapY + state.pipeGap, state.pipeWidth, canvas.height - (pipe.gapY + state.pipeGap));
       });
 
       // Draw ground
       ctx.fillStyle = '#8B7355';
-      ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+      ctx.fillRect(0, canvas.height - 40 * scale, canvas.width, 40 * scale);
 
       // Draw bird
       if (images.bird.complete) {
@@ -372,17 +411,19 @@ const FlappyBird = () => {
         ctx.fill();
       }
 
-      // Draw score
+      // Draw score (scaled font)
+      const scoreFontSize = Math.max(16, Math.floor(32 * scale));
       ctx.fillStyle = '#000';
-      ctx.font = 'bold 32px Arial';
-      ctx.fillText(`Score: ${state.score}`, 20, 50);
+      ctx.font = `bold ${scoreFontSize}px Arial`;
+      ctx.fillText(`Score: ${state.score}`, 20 * scale, 50 * scale);
 
-      // Draw high score
+      // Draw high score (scaled font)
+      const hsFontSize = Math.max(12, Math.floor(20 * scale));
       ctx.fillStyle = '#DAA520';
-      ctx.font = 'bold 20px Arial';
+      ctx.font = `bold ${hsFontSize}px Arial`;
       const hsText = `🏆 Best: ${highScore}`;
       const hsWidth = ctx.measureText(hsText).width;
-      ctx.fillText(hsText, canvas.width - hsWidth - 20, 50);
+      ctx.fillText(hsText, canvas.width - hsWidth - 20 * scale, 50 * scale);
     }, 1000 / 60); // 60 FPS
 
     window.addEventListener('keydown', handleKeyPress);
@@ -428,7 +469,7 @@ const FlappyBird = () => {
               <p className="home-highscore">🏆 High Score: {highScore}</p>
             )}
             <p className="home-instructions">
-              {window.innerWidth < 768 ? 'Tap to jump' : 'Press SPACE or click to jump'}
+              {isMobile ? 'Tap to jump' : 'Press SPACE or click to jump'}
             </p>
             <button onClick={startGame} className="start-button">
               🎮 Start Game
@@ -481,7 +522,7 @@ const FlappyBird = () => {
       <audio ref={jumpAudioRef} src="/jumpaudio.m4a" preload="auto" />
 
       <div className="controls">
-        <p>🎮 {window.innerWidth < 768 ? 'Tap to jump' : 'Press SPACE or click to jump'}</p>
+        <p>🎮 {isMobile ? 'Tap to jump' : 'Press SPACE or click to jump'}</p>
       </div>
     </div>
   );
